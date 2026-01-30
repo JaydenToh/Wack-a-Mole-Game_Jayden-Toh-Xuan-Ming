@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.navigation.compose.rememberNavController
 import com.example.wackamole.ui.theme.WackAMoleTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,6 +25,25 @@ class MainActivity : ComponentActivity() {
             WackAMoleTheme {
                 WhackAMoleApp()
             }
+        }
+    }
+}
+
+@Composable
+fun WhackAMoleApp() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "game") {
+        composable("game") {
+            GameScreen(
+                onNavigateToHighScore = { navController.navigate("highscore")}
+            )
+        }
+
+        composable("highscore") {
+            HighScoreScreen(
+                onNavigateBack = { navController.popBackStack()}
+            )
         }
     }
 }

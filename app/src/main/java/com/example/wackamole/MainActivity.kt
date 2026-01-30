@@ -6,27 +6,35 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
+import androidx.compose.ui.unit.dp
 import com.example.wackamole.ui.theme.WackAMoleTheme
 
 class MainActivity : ComponentActivity() {
@@ -100,6 +108,28 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
         while (timeLeft > 0) {
             delay((700..1000).random().toLong())
             currentMoleIndex = (0..8).random()
+        }
+    }
+
+    Column (
+        modifier = Modifier.fillMaxSize()
+    ) {
+       TopAppBar(
+           title = { Text("Wack a Mole") },
+           actions = {
+               IconButton(onClick = { onNavigateToHighScore() }) {
+                   Icon(Icons.Default.Star, contentDescription = "High Score")
+               }
+           }
+       )
+        Row(
+           modifier = Modifier
+               .fillMaxWidth()
+               .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+       ) {
+            Text(text = "Score: $score")
+            Text(text = "Time: $timeLeft")
         }
     }
 }

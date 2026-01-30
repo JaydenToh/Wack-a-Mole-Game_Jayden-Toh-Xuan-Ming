@@ -96,5 +96,15 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
         }
     }
 
+    LaunchedEffect(isPlaying) {
+        while (timeLeft > 0) {
+            delay((700..1000).random().toLong())
+            currentMoleIndex = (0..8).random()
+        }
+    }
+}
+
+@Composable
+fun HighScoreScreen(onNavigateBack: () -> Unit) {
 
 }

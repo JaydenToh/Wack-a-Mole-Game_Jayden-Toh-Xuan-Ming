@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Wack a Mole</string>
+    <string name="title_activity_navigation_ui">NavigationUI</string>
+</resources>

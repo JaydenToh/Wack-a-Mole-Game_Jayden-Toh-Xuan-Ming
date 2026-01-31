@@ -1,6 +1,8 @@
 “This is a development done to satisfy the assignment portion for module “Mobile App development” under Ngee Ann Polytechnic for AY24/25”.
 Jayden Toh Xuan Ming, S10241868J
 
+Tools Used: Gemini
+
 Before:
     LaunchedEffect(isPlaying) {
         while (timeLeft > 0) {
@@ -76,3 +78,25 @@ if (gameOver) {
 
 error for trying to solve game over displaying final score and a screen to show. Dont
 know how exactly to use alertdialog and what was missing. how to fix. 
+
+Advanced
+Before 
+OutlinedTextField(
+value = password,
+onValueChange = {password = it},
+label = { Text(text = "Password")},
+)
+
+After:
+OutlinedTextField(
+value = password,
+onValueChange = {password = it},
+label = { Text(text = "Password")},
+visualTransformation = PasswordVisualTransformation()
+)
+
+Before:
+
+
+Key Takeaways learnt in each of these areas stated
+

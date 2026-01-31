@@ -1,6 +1,5 @@
 package com.example.wackamole
 
-import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,10 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -107,23 +106,18 @@ fun WhackAMoleApp() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScreen(onNavigateToHighScore: () -> Unit) {
-    // Saving the high score data even when app closes
-    val context = LocalContext.current
-    val SharedPreferences= remember {
-        context.getSharedPreferences("score_save", Context.MODE_PRIVATE)
-    }
+fun GameScreen(
+    userId: Int,
+    dao: AppDao,
+    onNavigateToHighScore: () -> Unit) {
 
+    var scope = rememberCoroutineScope()
     var score by remember { mutableStateOf(0) }
     var timeLeft by remember { mutableStateOf(30) }
     var currentMoleIndex by remember {mutableStateOf(-1) }
     var isPlaying by remember { mutableStateOf(false) }
     var restart by remember { mutableStateOf(0) }
     var gameOver by remember { mutableStateOf(false) }
-
-    var highScore by remember {
-        mutableStateOf(SharedPreferences.getInt("high_score",0))
-    }
 
     LaunchedEffect(restart, isPlaying) {
         if (isPlaying) {
@@ -142,9 +136,12 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                 gameOver = true
             }
 
-            if (score > highScore) {
-                highScore = score
-                SharedPreferences.edit().putInt("high_score", highScore).apply()
+            if (gameOver) {
+                scope.launch {
+                    dao.insertScore(
+                        Score(userId = userId, score = score, timestamp = System.currentTimeMillis())
+                    )
+                }
             }
         }
     }
@@ -185,15 +182,6 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                 fontSize = 22.sp
             )
         }
-
-        Text(
-            text = "High Score: $highScore",
-            fontSize = 22.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -279,13 +267,15 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HighScoreScreen(onNavigateBack: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+fun HighScoreScreen(
+    dao: AppDao,
+    onNavigateBack: () -> Unit) {
+
+    val leaderboard by dao.getLeaderboard().collectAsState(initial = emptyList())
+
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("High Score") },
+            title = { Text("Leaderboard") },
             navigationIcon = {
                 IconButton(onClick = { onNavigateBack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -293,11 +283,26 @@ fun HighScoreScreen(onNavigateBack: () -> Unit) {
             }
         )
 
-        Text(
-            text = "High Score Screen",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(20.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("User")
+            Text("Best Score")
+        }
+
+        androidx.compose.foundation.lazy.LazyColumn {
+            items(leaderboard.size) { index ->
+                val entry = leaderboard[index]
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(entry.username)
+                    Text(entry.maxScore.toString())
+                }
+            }
+        }
     }
 }
 
@@ -321,7 +326,8 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
-                text = "Login Page",
+                text = "Login & Sign Up Page",
+                fontSize = 24.sp
             )
 
             Spacer(modifier = Modifier.padding(12.dp))
@@ -355,8 +361,13 @@ fun LoginScreen(
                     }
                 }
             ) {
-                Text(text = "Login")
+                Text(
+                    text = "Login",
+                    fontSize = 24.sp
+                )
             }
+
+            Spacer(modifier = Modifier.padding(10.dp))
 
             Button(
                 onClick = {
@@ -364,11 +375,15 @@ fun LoginScreen(
                         scope.launch {
                             val existing = dao.getUserByName(username)
                             if (existing == null) {
+
                                 val newUser = User(username = username, password = password)
-                                val newId = dao.insertUser(newUser)
-                                Toast.makeText(context, "User Created!", Toast.LENGTH_SHORT).show()
-                                // Pass the new ID back
-                                onLoginSuccess(newId.toInt())
+                                dao.insertUser(newUser)
+
+                                Toast.makeText(context, "Account Created! Please Login.", Toast.LENGTH_SHORT).show()
+
+                                username = ""
+                                password = ""
+
                             } else {
                                 Toast.makeText(context, "Username taken", Toast.LENGTH_SHORT).show()
                             }
@@ -378,7 +393,10 @@ fun LoginScreen(
                     }
                 }
             ) {
-                Text(text = "Sign Up")
+                Text(
+                    text = "Sign Up",
+                    fontSize = 24.sp
+                )
             }
         }
     }

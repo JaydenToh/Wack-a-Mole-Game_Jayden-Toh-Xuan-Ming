@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -136,7 +138,7 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
            actions = {
                IconButton(onClick = { onNavigateToHighScore() }) {
                    Icon(
-                       Icons.Default.Star, contentDescription = "High Score")
+                       Icons.Default.Leaderboard, contentDescription = "High Score")
                }
            }
        )
@@ -247,7 +249,26 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HighScoreScreen(onNavigateBack: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TopAppBar(
+            title = { Text("High Score") },
+            navigationIcon = {
+                IconButton(onClick = { onNavigateBack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }
+        )
 
+        Text(
+            text = "High Score Screen",
+            fontSize = 24.sp,
+            modifier = Modifier.padding(20.dp)
+        )
+    }
 }

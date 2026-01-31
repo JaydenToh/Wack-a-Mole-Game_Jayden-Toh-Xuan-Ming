@@ -1,7 +1,6 @@
 package com.example.wackamole
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -22,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Leaderboard
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,16 +58,35 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WhackAMoleApp() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
-    NavHost(navController = navController, startDestination = "game") {
+    val db = remember { AppDatabase.getDatabase(context) }
+    val dao = db.dao()
+    var currentUserId by remember { mutableStateOf<Int?>(null) }
+
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(dao = dao) { userId ->
+                currentUserId = userId
+                navController.navigate("game") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+        }
+
         composable("game") {
-            GameScreen(
-                onNavigateToHighScore = { navController.navigate("highscore")}
-            )
+                if (currentUserId != null) {
+                    GameScreen(
+                        userId = currentUserId!!,
+                        dao = dao,
+                        onNavigateToHighScore = { navController.navigate("highscore") }
+                    )
+                }
         }
 
         composable("highscore") {
             HighScoreScreen(
+                dao = dao,
                 onNavigateBack = { navController.popBackStack()}
             )
         }

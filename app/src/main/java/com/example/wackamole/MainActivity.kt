@@ -84,17 +84,18 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
     var timeLeft by remember { mutableStateOf(30) }
     var currentMoleIndex by remember {mutableStateOf(-1) }
     var isPlaying by remember { mutableStateOf(false) }
+    var restart by remember { mutableStateOf(0) }
 
     var highScore by remember {
         mutableStateOf(SharedPreferences.getInt("high_score",0))
     }
 
-    LaunchedEffect(isPlaying) {
+    LaunchedEffect(restart) {
         if (isPlaying) {
             score = 0
             timeLeft = 30
 
-            while (timeLeft > 0) {
+            while (timeLeft > 0 && isPlaying) {
                 delay(1000)
                 timeLeft = timeLeft - 1
             }
@@ -109,10 +110,12 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
         }
     }
 
-    LaunchedEffect(isPlaying) {
-        while (timeLeft > 0) {
-            delay((700..1000).random().toLong())
-            currentMoleIndex = (0..8).random()
+    LaunchedEffect(restart) {
+        if (isPlaying) {
+            while (timeLeft > 0 && isPlaying) {
+                delay((700..1000).random().toLong())
+                currentMoleIndex = (0..8).random()
+            }
         }
     }
 
@@ -158,7 +161,7 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                         currentMoleIndex = -1
                     }
                 ) {
-                    if (index == currentMoleIndex) {
+                    if (isPlaying && index == currentMoleIndex) {
                         Text("M")
                     }
                 }
@@ -166,15 +169,23 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
         }
 
         Button(
-            onClick = { isPlaying = true },
+            onClick = {
+                if (isPlaying) {
+                    isPlaying = false
+                    timeLeft = 30
+                    score = 0
+                    currentMoleIndex = -1
+                } else {
+                    isPlaying = true
+                    restart++
+                }
+            },
             modifier = Modifier
                 .padding(16.dp)
                 .align(Alignment.CenterHorizontally)
         ) {
-            Text("Start")
+            Text(if (isPlaying) "Restart" else "Start")
         }
-
-
     }
 }
 

@@ -23,3 +23,35 @@ LaunchedEffect(isPlaying) {
         currentMoleIndex = (0..8).random()
     }
 }
+
+Before:
+Button(
+onClick = {
+isPlaying = true},
+modifier = Modifier
+.padding(16.dp)
+.align(Alignment.CenterHorizontally)
+) {
+Text(if (isPlaying) "Restart" else "Start")
+}
+
+The issue was that the M randomiser was constantly moving despite the
+game not starting, and I did not know what to do to fix it. I also 
+have issue in regards that the game continues to reset itself when I
+click restart, not stop the game after restart and start from there. What
+should I do to fix this?
+
+Prompt
+
+
+After
+Button(
+onClick = {
+isPlaying = true
+restart++ },
+modifier = Modifier
+.padding(16.dp)
+.align(Alignment.CenterHorizontally)
+) {
+Text(if (isPlaying) "Restart" else "Start")
+}

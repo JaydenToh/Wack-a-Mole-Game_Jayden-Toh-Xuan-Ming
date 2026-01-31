@@ -55,3 +55,24 @@ modifier = Modifier
 ) {
 Text(if (isPlaying) "Restart" else "Start")
 }
+
+if (gameOver) {
+    AlertDialog(
+        onDismissRequest = {gameOver = false}, 
+        title = { Text(text = "Game Over") },
+        text = { Text(text = "Your final score was: $score") },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    gameOver = false
+                }
+            ) {
+                Text("Ok")
+            }
+        }
+    )
+}
+
+
+error for trying to solve game over displaying final score and a screen to show. Dont
+know how exactly to use alertdialog and what was missing. how to fix. 

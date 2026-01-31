@@ -26,6 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -33,11 +35,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.wackamole.ui.theme.WackAMoleTheme
 
 class MainActivity : ComponentActivity() {
@@ -85,23 +89,28 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
     var currentMoleIndex by remember {mutableStateOf(-1) }
     var isPlaying by remember { mutableStateOf(false) }
     var restart by remember { mutableStateOf(0) }
+    var gameOver by remember { mutableStateOf(false) }
 
     var highScore by remember {
         mutableStateOf(SharedPreferences.getInt("high_score",0))
     }
 
-    LaunchedEffect(restart) {
+    LaunchedEffect(restart, isPlaying) {
         if (isPlaying) {
             score = 0
             timeLeft = 30
+            currentMoleIndex = -1
+            gameOver = false
 
             while (timeLeft > 0 && isPlaying) {
                 delay(1000)
                 timeLeft = timeLeft - 1
             }
-
-            isPlaying = false
-            currentMoleIndex = -1
+            if (isPlaying) {
+                isPlaying = false
+                currentMoleIndex = -1
+                gameOver = true
+            }
 
             if (score > highScore) {
                 highScore = score
@@ -126,7 +135,8 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
            title = { Text("Wack a Mole") },
            actions = {
                IconButton(onClick = { onNavigateToHighScore() }) {
-                   Icon(Icons.Default.Star, contentDescription = "High Score")
+                   Icon(
+                       Icons.Default.Star, contentDescription = "High Score")
                }
            }
        )
@@ -136,12 +146,23 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
        ) {
-            Text(text = "Score: $score")
-            Text(text = "Time: $timeLeft")
+            Text(
+                text = "Score: $score",
+                fontSize = 22.sp
+            )
+            Text(
+                text = "Time: $timeLeft",
+                fontSize = 22.sp
+            )
         }
 
         Text(
-            text = "High Score: $highScore"
+            text = "High Score: $highScore",
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         )
 
         LazyVerticalGrid(
@@ -184,7 +205,44 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                 .padding(16.dp)
                 .align(Alignment.CenterHorizontally)
         ) {
-            Text(if (isPlaying) "Restart" else "Start")
+            Text(
+                if (isPlaying) "Restart" else "Start",
+                fontSize = 25.sp
+            )
+        }
+
+        if (gameOver) {
+            AlertDialog(
+                onDismissRequest = {gameOver = false},
+                title = {
+                    Text(
+                        text = "Game Over",
+                        fontSize = 25.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Your final score was: $score",
+                        fontSize = 22.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                        ) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            gameOver = false
+                        }
+                    ) {
+                        Text(
+                            "Ok",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            )
         }
     }
 }

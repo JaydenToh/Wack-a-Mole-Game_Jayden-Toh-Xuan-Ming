@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
@@ -89,20 +90,22 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
     }
 
     LaunchedEffect(isPlaying) {
-        score = 0
-        timeLeft = 30
+        if (isPlaying) {
+            score = 0
+            timeLeft = 30
 
-        while (timeLeft > 0) {
-            delay(1000)
-            timeLeft = timeLeft - 1
-        }
+            while (timeLeft > 0) {
+                delay(1000)
+                timeLeft = timeLeft - 1
+            }
 
-        isPlaying = false
-        currentMoleIndex = -1
+            isPlaying = false
+            currentMoleIndex = -1
 
-        if (score > highScore) {
-            highScore = score
-            SharedPreferences.edit().putInt("high_score", highScore).apply()
+            if (score > highScore) {
+                highScore = score
+                SharedPreferences.edit().putInt("high_score", highScore).apply()
+            }
         }
     }
 
@@ -134,6 +137,10 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
             Text(text = "Time: $timeLeft")
         }
 
+        Text(
+            text = "High Score: $highScore"
+        )
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             modifier = Modifier
@@ -144,7 +151,7 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                 Button(
                     modifier = Modifier
                         .padding(8.dp)
-                        .aspectRatio(2f),
+                        .aspectRatio(1f),
                     onClick = {
                         if (isPlaying && index == currentMoleIndex)
                             score++
@@ -156,6 +163,15 @@ fun GameScreen(onNavigateToHighScore: () -> Unit) {
                     }
                 }
             }
+        }
+
+        Button(
+            onClick = { isPlaying = true },
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text("Start")
         }
 
 

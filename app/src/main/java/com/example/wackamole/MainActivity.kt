@@ -2,12 +2,15 @@ package com.example.wackamole
 
 import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,14 +29,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
@@ -42,6 +50,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wackamole.ui.theme.WackAMoleTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,12 +75,15 @@ fun WhackAMoleApp() {
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
-            LoginScreen(dao = dao) { userId ->
-                currentUserId = userId
-                navController.navigate("game") {
-                    popUpTo("login") { inclusive = true }
+            LoginScreen(
+                dao = dao,
+                onLoginSuccess = { userId ->
+                    currentUserId = userId
+                    navController.navigate("game") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
-            }
+            )
         }
 
         composable("game") {
@@ -286,5 +298,88 @@ fun HighScoreScreen(onNavigateBack: () -> Unit) {
             fontSize = 24.sp,
             modifier = Modifier.padding(20.dp)
         )
+    }
+}
+
+@Composable
+fun LoginScreen(
+    dao: AppDao,
+    onLoginSuccess: (Int) -> Unit,
+    modifier: Modifier = Modifier
+){
+    var username by rememberSaveable { mutableStateOf("")}
+    var password by rememberSaveable { mutableStateOf("")}
+
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    Box(
+        modifier = modifier.fillMaxSize().padding(24.dp),
+        contentAlignment = Alignment.Center
+    ){
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Text(
+                text = "Login Page",
+            )
+
+            Spacer(modifier = Modifier.padding(12.dp))
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = {username = it},
+                label = { Text(text = "Username")},
+            )
+
+            Spacer(modifier = Modifier.padding(12.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = {password = it},
+                label = { Text(text = "Password")},
+                visualTransformation = PasswordVisualTransformation()
+            )
+
+            Spacer(modifier = Modifier.padding(12.dp))
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        val user = dao.login(username, password)
+                        if (user != null) {
+                            onLoginSuccess(user.userId)
+                        } else {
+                            Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            ) {
+                Text(text = "Login")
+            }
+
+            Button(
+                onClick = {
+                    if (username.isNotEmpty() && password.isNotEmpty()) {
+                        scope.launch {
+                            val existing = dao.getUserByName(username)
+                            if (existing == null) {
+                                val newUser = User(username = username, password = password)
+                                val newId = dao.insertUser(newUser)
+                                Toast.makeText(context, "User Created!", Toast.LENGTH_SHORT).show()
+                                // Pass the new ID back
+                                onLoginSuccess(newId.toInt())
+                            } else {
+                                Toast.makeText(context, "Username taken", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(context, "Enter details", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            ) {
+                Text(text = "Sign Up")
+            }
+        }
     }
 }
